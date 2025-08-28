@@ -4,7 +4,7 @@
 
 This directory appears to be related to a Google Cloud project. The `.env` file contains the following project identifier:
 
-`GOOGLE_CLOUD_PROJECT=feisty-oxide-470318-t3`
+`GOOGLE_CLOUD_PROJECT=`
 
 It is likely a deployment or configuration directory for services running on Google Cloud.
 
