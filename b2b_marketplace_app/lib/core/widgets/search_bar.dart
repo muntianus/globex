@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart'; // For categories and regions
+import 'package:b2b_marketplace_app/l10n/app_localizations.dart';
 
 class SearchBarWidget extends StatefulWidget {
   final Function(String query, String category, String region, double minRating, bool verified, String companySize) onSearch;
@@ -48,7 +49,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Поиск компаний, услуг...',
+                    hintText: AppLocalizations.of(context)!.searchCompaniesServices,
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
@@ -74,7 +75,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   });
                 },
                 icon: const Icon(Icons.filter_list),
-                label: const Text('Фильтры'),
+                label: Text(AppLocalizations.of(context)!.filters),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   shape: RoundedRectangleBorder(
@@ -91,14 +92,14 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                 children: [
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Категория',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.category,
                       border: OutlineInputBorder(),
                     ),
                     items: categories.map((cat) {
                       return DropdownMenuItem(
                         value: cat['id'],
-                        child: Text('${cat['icon']} ${cat['name']}'),
+                        child: Text('${cat['icon']} ${AppLocalizations.of(context)!.translateCategory(cat['nameKey']!)}'),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -111,14 +112,14 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   const SizedBox(height: 12.0),
                   DropdownButtonFormField<String>(
                     value: _selectedRegion,
-                    decoration: const InputDecoration(
-                      labelText: 'Регион',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.region,
                       border: OutlineInputBorder(),
                     ),
                     items: regions.map((region) {
                       return DropdownMenuItem(
                         value: region,
-                        child: Text(region == 'all' ? 'Все регионы' : region),
+                        child: Text(region == 'all' ? AppLocalizations.of(context)!.allRegions : region),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -131,15 +132,15 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   const SizedBox(height: 12.0),
                   DropdownButtonFormField<String>(
                     value: _companySize,
-                    decoration: const InputDecoration(
-                      labelText: 'Размер компании',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.companySize,
                       border: OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('Любой')),
-                      DropdownMenuItem(value: '10-50', child: Text('10-50 сотрудников')),
-                      DropdownMenuItem(value: '50-100', child: Text('50-100 сотрудников')),
-                      DropdownMenuItem(value: '100-500', child: Text('100-500 сотрудников')),
+                    items: [
+                      DropdownMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.any)),
+                      DropdownMenuItem(value: '10-50', child: Text(AppLocalizations.of(context)!.employees(50))),
+                      DropdownMenuItem(value: '50-100', child: Text(AppLocalizations.of(context)!.employees(100))),
+                      DropdownMenuItem(value: '100-500', child: Text(AppLocalizations.of(context)!.employees(500))),
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -151,11 +152,11 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   const SizedBox(height: 12.0),
                   DropdownButtonFormField<double>(
                     value: _minRating,
-                    decoration: const InputDecoration(
-                      labelText: 'Минимальный рейтинг',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.minRating,
                       border: OutlineInputBorder(),
                     ),
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: 0.0, child: Text('Любой')),
                       DropdownMenuItem(value: 4.0, child: Text('4+')),
                       DropdownMenuItem(value: 4.5, child: Text('4.5+')),
@@ -180,7 +181,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                           });
                         },
                       ),
-                      const Text('Только верифицированные'),
+                      Text(AppLocalizations.of(context)!.verifiedOnly),
                     ],
                   ),
                 ],

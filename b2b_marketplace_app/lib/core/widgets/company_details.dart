@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/company.dart';
+import 'package:b2b_marketplace_app/l10n/app_localizations.dart';
 
 class CompanyDetailsWidget extends StatelessWidget {
   final Company company;
@@ -43,23 +44,23 @@ class CompanyDetailsWidget extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.grey[700]),
               ),
               const Divider(height: 32),
-              _buildInfoRow(Icons.star, 'Рейтинг', '${company.rating}/5 (${company.reviewsCount} отзывов)'),
-              _buildInfoRow(Icons.check_circle, 'Завершенных сделок', '${company.completedDeals}'),
-              _buildInfoRow(Icons.access_time, 'Среднее время ответа', company.responseTime),
-              if (company.verified) _buildInfoRow(Icons.verified, 'Статус', 'Верифицирован'),
+              _buildInfoRow(Icons.star, AppLocalizations.of(context)!.rating, '${company.rating}/5 (${company.reviewsCount} ${AppLocalizations.of(context)!.reviews})'),
+              _buildInfoRow(Icons.check_circle, AppLocalizations.of(context)!.completedDeals, '${company.completedDeals}'),
+              _buildInfoRow(Icons.access_time, AppLocalizations.of(context)!.responseTime, company.responseTime),
+              if (company.verified) _buildInfoRow(Icons.verified, AppLocalizations.of(context)!.status, AppLocalizations.of(context)!.verified),
               const Divider(height: 32),
               Text(
-                'Информация о компании',
+                AppLocalizations.of(context)!.companyInfo,
                 style: Theme.of(context).textTheme.headlineSmall, // Changed from headline6
               ),
               const SizedBox(height: 12),
-              _buildInfoRow(Icons.business, 'ИНН', company.inn),
-              _buildInfoRow(Icons.location_on, 'Регион', company.region),
-              _buildInfoRow(Icons.calendar_today, 'Год основания', '${company.yearFounded}'),
-              _buildInfoRow(Icons.people, 'Сотрудников', company.employees),
+              _buildInfoRow(Icons.business, AppLocalizations.of(context)!.inn, company.inn),
+              _buildInfoRow(Icons.location_on, AppLocalizations.of(context)!.region, company.region),
+              _buildInfoRow(Icons.calendar_today, AppLocalizations.of(context)!.yearFounded, '${company.yearFounded}'),
+              _buildInfoRow(Icons.people, AppLocalizations.of(context)!.employeesText(company.employees), company.employees),
               const Divider(height: 32),
               Text(
-                'Услуги',
+                AppLocalizations.of(context)!.services,
                 style: Theme.of(context).textTheme.headlineSmall, // Changed from headline6
               ),
               const SizedBox(height: 12),
@@ -72,21 +73,21 @@ class CompanyDetailsWidget extends StatelessWidget {
               ),
               const Divider(height: 32),
               Text(
-                'Контакты',
+                AppLocalizations.of(context)!.contacts,
                 style: Theme.of(context).textTheme.headlineSmall, // Changed from headline6
               ),
               const SizedBox(height: 12),
-              _buildInfoRow(Icons.phone, 'Телефон', company.phone),
-              _buildInfoRow(Icons.email, 'Email', company.email),
-              _buildInfoRow(Icons.language, 'Веб-сайт', company.website),
+              _buildInfoRow(Icons.phone, AppLocalizations.of(context)!.phone, company.phone),
+              _buildInfoRow(Icons.email, AppLocalizations.of(context)!.email, company.email),
+              _buildInfoRow(Icons.language, AppLocalizations.of(context)!.website, company.website),
               const Divider(height: 32),
               Text(
-                'Последние отзывы',
+                AppLocalizations.of(context)!.latestReviews,
                 style: Theme.of(context).textTheme.headlineSmall, // Changed from headline6
               ),
               const SizedBox(height: 12),
               if (company.reviews.isEmpty)
-                const Text('Отзывов пока нет.')
+                Text(AppLocalizations.of(context)!.noReviewsYet)
               else
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
