@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+import os
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -9,7 +10,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # --- Configuration ---
-SECRET_KEY = "your-secret-key" # In a real app, use environment variables
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
