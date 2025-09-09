@@ -1,57 +1,110 @@
+# =====================================================
+# Globex B2B Маркетплейс - Конфигурация Docker Compose
+# =====================================================
+# Полная среда разработки со всеми сервисами
+# 
+# Сервисы:
+# - frontend: React сервер разработки
+# - backend: FastAPI сервер приложения  
+# - db: База данных PostgreSQL
+# - nginx: Reverse proxy с SSL терминацией
+# =====================================================
+
 version: '3.8'
 
 services:
+  # =====================================================
+  # Frontend Сервис (React Приложение)
+  # =====================================================
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./frontend                    # Директория контекста сборки
+      dockerfile: Dockerfile                 # Расположение Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:3000"                         # Открыть порт React dev сервера
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=http://localhost:8000  # Backend API URL для frontend
     depends_on:
-      - backend
+      - backend                             # Ждать запуска backend
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app                     # Монтировать исходный код для hot reload
+      - /app/node_modules                   # Сохранить node_modules в контейнере
+    # Проверка здоровья сервиса
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # =====================================================
+  # Backend Сервис (FastAPI Приложение)
+  # =====================================================
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./backend                     # Директория контекста сборки
+      dockerfile: Dockerfile                 # Расположение Dockerfile
     ports:
-      - "8000:8000"
+      - "8000:8000"                         # Открыть порт FastAPI сервера
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/globex
-      - SECRET_KEY=your-secret-key-here
+      - DATABASE_URL=postgresql://user:password@db:5432/globex  # Подключение к базе данных
+      - SECRET_KEY=your-secret-key-here     # Ключ подписи JWT (ИЗМЕНИТЕ В ПРОДАКШЕНЕ!)
     depends_on:
-      - db
+      - db                                  # Ждать запуска базы данных
     volumes:
-      - ./backend:/app
+      - ./backend:/app                      # Монтировать исходный код для hot reload
+    # Проверка здоровья сервиса
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # =====================================================
+  # Сервис базы данных (PostgreSQL)
+  # =====================================================
   db:
-    image: postgres:15-alpine
+    image: postgres:15-alpine               # PostgreSQL 15 на Alpine Linux
     environment:
-      - POSTGRES_DB=globex
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=globex                 # Имя базы данных
+      - POSTGRES_USER=user                 # Пользователь базы данных
+      - POSTGRES_PASSWORD=password         # Пароль базы данных (ИЗМЕНИТЕ В ПРОДАКШЕНЕ!)
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data  # Постоянное хранилище данных
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql  # Начальная схема
     ports:
-      - "5432:5432"
+      - "5432:5432"                        # Открыть порт PostgreSQL
+    # Проверка готовности базы данных
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d globex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # =====================================================
+  # Сервис Reverse Proxy (Nginx)
+  # =====================================================
   nginx:
-    image: nginx:alpine
+    image: nginx:alpine                     # Nginx на Alpine Linux
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"                            # HTTP порт
+      - "443:443"                          # HTTPS порт
     volumes:
-      - ./frontend/nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf  # Конфигурация Nginx
+      - ./ssl:/etc/nginx/ssl               # Директория SSL сертификатов
     depends_on:
-      - frontend
-      - backend
+      - frontend                           # Ждать запуска frontend
+      - backend                            # Ждать запуска backend
+    # Проверка готовности прокси
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+# =====================================================
+# Именованные тома
+# =====================================================
+# Постоянное хранилище для данных базы данных
 volumes:
-  postgres_data:
+  postgres_data:                           # Постоянство данных PostgreSQL
+    driver: local
