@@ -7,6 +7,7 @@ import 'package:b2b_marketplace_app/l10n/app_localizations.dart';
 import 'package:b2b_marketplace_app/features/auth/login_page.dart'; // New import
 import 'package:b2b_marketplace_app/features/auth/register_page.dart'; // New import
 import 'package:b2b_marketplace_app/core/providers/auth_provider.dart'; // New import
+import 'package:b2b_marketplace_app/core/providers/app_initializer.dart'; // New import
 import 'package:b2b_marketplace_app/features/home/home_page.dart';
 import 'package:b2b_marketplace_app/features/investors_showcase/investor_page.dart';
 import 'package:b2b_marketplace_app/features/about/about_page.dart';
@@ -32,6 +33,8 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
     final authState = ref.watch(authProvider);
+    
+    // Companies provider will handle its own initialization
 
     final GoRouter router = GoRouter(
       redirect: (BuildContext context, GoRouterState state) {
