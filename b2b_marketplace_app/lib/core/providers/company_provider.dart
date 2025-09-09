@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/company.dart';
 import '../data/mock_data.dart';
+import '../services/api_service.dart';
 
 final companyProvider = ChangeNotifierProvider((ref) => CompanyProvider());
 
@@ -15,8 +16,21 @@ class CompanyProvider with ChangeNotifier {
   String _companySize = 'all';
   String _sortBy = 'rating'; // 'rating', 'reviews', 'deals'
 
-  final List<Company> _allCompanies = mockCompanies;
+  List<Company> _allCompanies = [];
+  List<Map<String, String>> _categories = [];
+  bool _isLoading = false;
+  String? _error;
+  bool _initialized = false;
+
+  CompanyProvider() {
+    // Initialize data when provider is created
+    _initializeData();
+  }
+
   List<Company> get allCompanies => _allCompanies;
+  List<Map<String, String>> get categories => _categories;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
 
   String get selectedCategory => _selectedCategory;
   String get sortBy => _sortBy;
@@ -97,5 +111,75 @@ class CompanyProvider with ChangeNotifier {
   void setSelectedCategory(String category) {
     _selectedCategory = category;
     notifyListeners();
+  }
+
+  // Load companies from API
+  Future<void> loadCompanies() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // Test connection first
+      final connectionOk = await ApiService.testConnection();
+      if (!connectionOk) {
+        // Fallback to mock data if API is not available
+        _allCompanies = mockCompanies;
+        _categories = categories.map((cat) => {
+          'id': cat['id']!,
+          'nameKey': cat['nameKey']!,
+          'icon': cat['icon']!,
+        }).toList();
+        _error = 'API недоступен. Используются тестовые данные.';
+      } else {
+        // Load from API
+        _allCompanies = await ApiService.getCompanies(limit: 100);
+        _categories = await ApiService.getCategories();
+      }
+    } catch (e) {
+      // Fallback to mock data on error
+      _allCompanies = mockCompanies;
+      _categories = categories.map((cat) => {
+        'id': cat['id']!,
+        'nameKey': cat['nameKey']!,
+        'icon': cat['icon']!,
+      }).toList();
+      _error = 'Ошибка загрузки: $e. Используются тестовые данные.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Get specific company by ID
+  Future<Company?> getCompany(int id) async {
+    try {
+      return await ApiService.getCompany(id);
+    } catch (e) {
+      // Fallback to local data
+      return _allCompanies.where((c) => c.id == id).firstOrNull;
+    }
+  }
+
+  // Clear error message
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  // Initialize provider (call this on app start)
+  Future<void> initialize() async {
+    await loadCompanies();
+  }
+
+  // Private initialization method that doesn't cause Riverpod conflicts
+  void _initializeData() {
+    if (!_initialized) {
+      _initialized = true;
+      // Load data without notifying listeners during initialization
+      Future.delayed(Duration.zero, () async {
+        await loadCompanies();
+      });
+    }
   }
 }

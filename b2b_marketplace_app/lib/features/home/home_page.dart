@@ -6,7 +6,7 @@ import '../../core/data/mock_data.dart';
 import '../../core/widgets/company_list.dart';
 import '../../core/widgets/search_bar.dart';
 import '../../core/widgets/company_details.dart';
-import '../../core/providers/company_provider.dart'; // This will be the Riverpod provider
+import '../../core/providers/company_provider.dart'; // Use the new provider
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme_provider.dart';
 import 'package:b2b_marketplace_app/l10n/app_localizations.dart';
@@ -20,6 +20,8 @@ class HomePage extends ConsumerWidget {
     final companyNotifier = ref.watch(companyProvider);
     final filteredCompanies = companyNotifier.filteredCompanies;
     final promoCompanies = companyNotifier.allCompanies.where((c) => c.verified).take(3).toList();
+    final isLoading = companyNotifier.isLoading;
+    final error = companyNotifier.error;
 
     void _showCompanyDetails(Company company) {
       showDialog(
@@ -66,8 +68,46 @@ class HomePage extends ConsumerWidget {
           children: [
             // Search Bar
             SearchBarWidget(onSearch: (query, category, region, minRating, verified, companySize) {
-              ref.read(companyProvider).handleSearch(query, category, region, minRating, verified, companySize);
+              ref.read(companyProvider.notifier).handleSearch(query, category, region, minRating, verified, companySize);
             }),
+
+            // Error message
+            if (error != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: Colors.orange.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        error,
+                        style: TextStyle(color: Colors.orange.shade700),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => ref.read(companyProvider.notifier).clearError(),
+                      child: const Text('Скрыть'),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Loading indicator
+            if (isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
 
             // Promo Carousel
             if (promoCompanies.isNotEmpty)
@@ -149,7 +189,7 @@ class HomePage extends ConsumerWidget {
                         title: Text('${category['icon']} ${category['name']}'),
                         selected: companyNotifier.selectedCategory == category['id'],
                         onTap: () {
-                          ref.read(companyProvider).setSelectedCategory(category['id']!);
+                          ref.read(companyProvider.notifier).setSelectedCategory(category['id']!);
                         },
                       );
                     },
@@ -172,7 +212,7 @@ class HomePage extends ConsumerWidget {
                             DropdownButton<String>(
                               value: companyNotifier.sortBy,
                               onChanged: (String? newValue) {
-                                ref.read(companyProvider).setSortBy(newValue!);
+                                ref.read(companyProvider.notifier).setSortBy(newValue!);
                               },
                               items: <DropdownMenuItem<String>>[
                                 DropdownMenuItem<String>(
@@ -196,7 +236,7 @@ class HomePage extends ConsumerWidget {
                         companies: filteredCompanies,
                         onCompanyTap: _showCompanyDetails,
                         onCompanyDismissed: (company, direction) {
-                          ref.read(companyProvider).handleCompanyDismissed(company);
+                          ref.read(companyProvider.notifier).handleCompanyDismissed(company);
                            if (direction == DismissDirection.startToEnd) {
                               print(AppLocalizations.of(context)!.swipedRightLiked(company.name));
                             } else {

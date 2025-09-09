@@ -17,13 +17,14 @@ services:
   # Frontend Сервис (React Приложение)
   # =====================================================
   frontend:
-    build:
-      context: ./frontend                    # Директория контекста сборки
-      dockerfile: Dockerfile                 # Расположение Dockerfile
+    image: node:18-alpine                   # Использовать Node.js образ для разработки
+    working_dir: /app
+    command: sh -c "npm install && npm start"
     ports:
       - "3000:3000"                         # Открыть порт React dev сервера
     environment:
       - REACT_APP_API_URL=http://localhost:8000  # Backend API URL для frontend
+      - CHOKIDAR_USEPOLLING=true           # Для hot reload в Docker
     depends_on:
       - backend                             # Ждать запуска backend
     volumes:
@@ -31,7 +32,7 @@ services:
       - /app/node_modules                   # Сохранить node_modules в контейнере
     # Проверка здоровья сервиса
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3

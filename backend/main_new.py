@@ -43,9 +43,7 @@ app.add_middleware(
         "http://localhost:3000", 
         "http://127.0.0.1:3000",
         "http://localhost:8080",  # Flutter web app
-        "http://127.0.0.1:8080",  # Flutter web app
-        "http://localhost:8081",  # Flutter web app
-        "http://127.0.0.1:8081"   # Flutter web app
+        "http://127.0.0.1:8080"   # Flutter web app
     ],
     allow_credentials=True,
     allow_methods=["*"],
