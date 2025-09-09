@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart'; // For categories and regions
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/mock_data.dart'; // For regions
+import '../providers/company_provider.dart'; // For categories
 import 'package:b2b_marketplace_app/l10n/app_localizations.dart';
 
-class SearchBarWidget extends StatefulWidget {
+class SearchBarWidget extends ConsumerStatefulWidget {
   final Function(String query, String category, String region, double minRating, bool verified, String companySize) onSearch;
 
   const SearchBarWidget({Key? key, required this.onSearch}) : super(key: key);
 
   @override
-  State<SearchBarWidget> createState() => _SearchBarWidgetState();
+  ConsumerState<SearchBarWidget> createState() => _SearchBarWidgetState();
 }
 
-class _SearchBarWidgetState extends State<SearchBarWidget> {
+class _SearchBarWidgetState extends ConsumerState<SearchBarWidget> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'all';
   String _selectedRegion = 'all';
@@ -96,7 +98,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                       labelText: AppLocalizations.of(context)!.category,
                       border: OutlineInputBorder(),
                     ),
-                    items: categories.map((cat) {
+                    items: ref.watch(companyProvider).categories.map((cat) {
                       return DropdownMenuItem(
                         value: cat['id'],
                         child: Text('${cat['icon']} ${AppLocalizations.of(context)!.translateCategory(cat['nameKey']!)}'),

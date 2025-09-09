@@ -3,3 +3,5 @@ uvicorn
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
+asyncpg
+databases[postgresql]
