@@ -19,3 +19,10 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+
+# Local configs
+.claude-mcp.json
+mcp-servers.json
+
+# SSL certificates
+ssl/
