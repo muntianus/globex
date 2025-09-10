@@ -4,11 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a multi-platform B2B marketplace monorepo containing three main applications:
+This is a full-stack B2B marketplace platform designed for connecting companies with investors and facilitating business partnerships. The system consists of three integrated applications:
 
-1. **frontend/** - React 19 + TypeScript web application with Bootstrap 5 styling
-2. **backend/** - FastAPI Python service with JWT authentication and mock data
-3. **b2b_marketplace_app/** - Flutter cross-platform mobile/desktop application
+1. **frontend/** - React 19 + TypeScript web dashboard with Bootstrap 5 styling
+2. **backend/** - FastAPI Python API service with JWT authentication and PostgreSQL integration
+3. **b2b_marketplace_app/** - Flutter cross-platform mobile/desktop application with investment showcase features
+
+### Key Business Features
+- **Company Management**: Registration and profile management for businesses
+- **Investment Proposals**: Comprehensive system for creating and showcasing investment opportunities
+- **Investor Portal**: Browse and filter investment proposals by industry, stage, type, and amount
+- **Authentication System**: Secure JWT-based authentication with role-based access
+- **Multi-platform Access**: Web dashboard + mobile/desktop Flutter application
 
 ## Build and Development Commands
 
@@ -56,19 +63,23 @@ pytest test_main.py        # Run specific test file
 cd b2b_marketplace_app
 flutter pub get           # Install dependencies
 flutter test             # Run unit tests
+flutter run -d chrome --web-port 8081  # Run web version (recommended)
 flutter run              # Run on connected device/emulator
 
 # Key dependencies: go_router, hooks_riverpod, flutter_hooks, freezed
+# App runs on http://localhost:8081 for web development
 ```
 
 ## Architecture
 
 ### Backend Architecture (FastAPI)
 - **Authentication**: JWT-based with OAuth2PasswordBearer flow
-- **Password Security**: bcrypt hashing via passlib
-- **Data Layer**: Currently uses mock in-memory data (`fake_users_db`)
+- **Password Security**: bcrypt hashing via passlib 
+- **Data Layer**: PostgreSQL database with SQLAlchemy-ready schema
 - **API Structure**: RESTful endpoints with Pydantic models for request/response validation
-- **Key Models**: `User`, `UserInDB`, `Token`, `TokenData`
+- **Key Models**: `User`, `UserInDB`, `Token`, `TokenData`, `Company`, `InvestmentProposal`
+- **CORS Configuration**: Configured for Flutter web (port 8081) and React (port 3000)
+- **Database Schema**: Comprehensive schema including companies and investment_proposals tables
 
 ### Frontend Architecture (React 19)
 - **State Management**: Currently uses mock data, no global state management library
@@ -78,11 +89,16 @@ flutter run              # Run on connected device/emulator
 - **Build System**: Create React App with TypeScript strict mode
 
 ### Flutter Architecture
-- **State Management**: Hooks Riverpod with Flutter Hooks
-- **Navigation**: go_router for declarative routing
+- **State Management**: Hooks Riverpod with Flutter Hooks for reactive state management
+- **Navigation**: go_router for declarative routing with authentication guards
 - **Code Generation**: freezed + json_serializable for data classes
-- **Localization**: flutter_localizations with intl
+- **Localization**: flutter_localizations with intl (Russian + English)
 - **Testing**: golden_toolkit + mocktail for comprehensive testing
+- **Key Features**: 
+  - Company creation and management
+  - Investment proposal showcase with advanced filtering
+  - Responsive design for web, mobile, and desktop
+  - Real-time data updates through providers
 
 ### Docker Compose Stack
 - **Frontend**: Node.js 18 Alpine with hot reload via volume mounts
@@ -96,6 +112,16 @@ flutter run              # Run on connected device/emulator
 - `POST /token` - Login and obtain JWT token (username/password form data)
 - `GET /users/me/` - Get current authenticated user info
 - `POST /register/` - Register new user (currently accepts UserInDB model)
+
+### Company Management
+- `POST /companies/` - Create new company (requires authentication)
+- `GET /companies/` - List all companies
+- `GET /companies/{company_id}` - Get specific company details
+
+### Investment Proposals (Planned)
+- `GET /investment-proposals/` - List investment proposals with filtering
+- `POST /investment-proposals/` - Create new investment proposal
+- `GET /investment-proposals/{proposal_id}` - Get specific proposal details
 
 ### General
 - `GET /` - Welcome message and health check
@@ -116,7 +142,79 @@ All environment variables are configured in `docker-compose.yml` with developmen
 
 ## Database Schema
 
-Initial schema is defined in `backend/init.sql` and automatically loaded into PostgreSQL on first startup. Currently the backend uses mock data, but the infrastructure is ready for real database integration.
+Comprehensive database schema defined in `backend/schema.sql` and automatically loaded into PostgreSQL on first startup.
+
+### Core Tables
+
+#### Users Table
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    full_name VARCHAR(100),
+    hashed_password VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Companies Table
+```sql
+CREATE TABLE companies (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    inn VARCHAR(20) UNIQUE,
+    category VARCHAR(100),
+    description TEXT,
+    region VARCHAR(100),
+    city VARCHAR(100),
+    address TEXT,
+    website VARCHAR(255),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    created_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Investment Proposals Table
+```sql
+CREATE TABLE investment_proposals (
+    id SERIAL PRIMARY KEY,
+    company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    investment_amount DECIMAL(15,2) NOT NULL,
+    equity_percentage DECIMAL(5,2),
+    expected_return DECIMAL(5,2),
+    investment_type VARCHAR(50) NOT NULL, -- 'equity', 'debt', 'hybrid'
+    business_stage VARCHAR(50) NOT NULL, -- 'startup', 'growth', 'expansion', 'mature'
+    industry VARCHAR(100) NOT NULL,
+    location VARCHAR(100) NOT NULL,
+    min_investment DECIMAL(15,2),
+    max_investment DECIMAL(15,2),
+    funding_deadline DATE,
+    use_of_funds TEXT,
+    financial_highlights TEXT,
+    team_info TEXT,
+    market_opportunity TEXT,
+    competitive_advantages TEXT,
+    risks TEXT,
+    status VARCHAR(20) DEFAULT 'active', -- 'active', 'paused', 'closed', 'funded'
+    views_count INTEGER DEFAULT 0,
+    interested_investors INTEGER DEFAULT 0,
+    created_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Sample Data
+The schema includes seed data with:
+- Admin user (username: admin, password: admin)
+- 5 sample companies across different industries
+- 5 detailed investment proposals with realistic business data
 
 ## Testing Strategy
 
@@ -134,6 +232,39 @@ Initial schema is defined in `backend/init.sql` and automatically loaded into Po
 - Unit tests: `flutter test`
 - Integration tests: Available in `test/` directory
 - Golden tests: Using golden_toolkit for widget testing
+
+## Flutter Application Features
+
+### Investment Showcase
+- **Advanced Filtering**: Filter proposals by industry, business stage, investment type, and amount range
+- **Detailed Proposal Cards**: Comprehensive display of investment opportunities with financial highlights
+- **Responsive Design**: Optimized for web, mobile, and desktop platforms
+- **Mock Data**: Currently uses rich mock data with 5 realistic investment proposals
+
+### Company Management
+- **Company Creation**: Full form with validation for creating company profiles
+- **Integration Ready**: Designed to integrate with backend API for data persistence
+- **Required Fields**: Name, INN, category, description, region, contact information
+
+### Navigation & UX
+- **Authenticated Routes**: Login/register flow with route protection
+- **Intuitive Navigation**: Clear navigation between home, investors, company creation, and other features
+- **Responsive Layout**: Consistent experience across all device types
+
+## Development Notes
+
+### Current Status
+- **Backend**: Fully functional API with PostgreSQL schema ready
+- **Frontend (React)**: Basic authentication and dashboard structure
+- **Flutter App**: Complete investment showcase with mock data, ready for API integration
+- **Database**: Production-ready schema with sample data
+
+### Next Steps
+1. Connect Flutter investment proposals to backend API
+2. Implement investor interest/contact functionality
+3. Add real-time notifications for new proposals
+4. Enhance filtering and search capabilities
+5. Add company dashboard for managing their proposals
 
 ## SSL Configuration
 

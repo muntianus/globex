@@ -184,4 +184,26 @@ class ApiService {
       return false;
     }
   }
+
+  // Create a new company
+  static Future<Company> createCompany(Map<String, dynamic> companyData) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/companies/'),
+            headers: _headers,
+            body: jsonEncode(companyData),
+          )
+          .timeout(_timeoutDuration);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Company.fromJson(data);
+      } else {
+        throw Exception('Failed to create company: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error creating company: $e');
+    }
+  }
 }

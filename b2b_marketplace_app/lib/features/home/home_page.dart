@@ -50,8 +50,9 @@ class HomePage extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.add_business),
+            tooltip: 'Создать компанию',
             onPressed: () {
-              // TODO: Implement add company functionality
+              context.go('/create-company');
             },
           ),
           IconButton(
