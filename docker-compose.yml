@@ -37,6 +37,7 @@ services:
       timeout: 10s
       retries: 3
 
+
   # =====================================================
   # Backend Сервис (FastAPI Приложение)
   # =====================================================
@@ -71,7 +72,9 @@ services:
       - POSTGRES_PASSWORD=password         # Пароль базы данных (ИЗМЕНИТЕ В ПРОДАКШЕНЕ!)
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Постоянное хранилище данных
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql  # Начальная схема
+      # Инициализация схемы и тестовых данных (применяется только при первом создании тома)
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./backend/seed_companies.sql:/docker-entrypoint-initdb.d/02_seed.sql
     ports:
       - "5432:5432"                        # Открыть порт PostgreSQL
     # Проверка готовности базы данных

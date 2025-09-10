@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/company.dart';
@@ -50,8 +49,9 @@ class HomePage extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.add_business),
+            tooltip: 'Создать компанию',
             onPressed: () {
-              // TODO: Implement add company functionality
+              context.go('/create-company');
             },
           ),
           IconButton(
@@ -91,6 +91,19 @@ class HomePage extends ConsumerWidget {
                         error,
                         style: TextStyle(color: Colors.orange.shade700),
                       ),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        await ref.read(companyProvider.notifier).copyErrorToClipboard();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Ошибка скопирована в буфер обмена'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.copy, color: Colors.orange.shade700),
+                      tooltip: 'Скопировать ошибку',
                     ),
                     TextButton(
                       onPressed: () => ref.read(companyProvider.notifier).clearError(),

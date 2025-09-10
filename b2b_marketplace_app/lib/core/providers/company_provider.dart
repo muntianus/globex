@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/company.dart';
 import '../data/mock_data.dart';
@@ -165,6 +165,13 @@ class CompanyProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Copy error to clipboard
+  Future<void> copyErrorToClipboard() async {
+    if (_error != null) {
+      await Clipboard.setData(ClipboardData(text: _error!));
+    }
   }
 
   // Initialize provider (call this on app start)

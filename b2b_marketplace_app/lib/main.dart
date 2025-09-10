@@ -9,7 +9,7 @@ import 'package:b2b_marketplace_app/features/auth/register_page.dart'; // New im
 import 'package:b2b_marketplace_app/core/providers/auth_provider.dart'; // New import
 import 'package:b2b_marketplace_app/core/providers/app_initializer.dart'; // New import
 import 'package:b2b_marketplace_app/features/home/home_page.dart';
-import 'package:b2b_marketplace_app/features/investors_showcase/investor_page.dart';
+import 'package:b2b_marketplace_app/features/investors_showcase/investment_proposals_page.dart';
 import 'package:b2b_marketplace_app/features/about/about_page.dart';
 import 'package:b2b_marketplace_app/features/opportunities/opportunities_page.dart';
 import 'package:b2b_marketplace_app/features/events/events_page.dart';
@@ -17,6 +17,7 @@ import 'package:b2b_marketplace_app/features/pricing/pricing_page.dart';
 import 'package:b2b_marketplace_app/features/blog/blog_page.dart';
 import 'package:b2b_marketplace_app/features/blog/blog_post_page.dart';
 import 'package:b2b_marketplace_app/features/contact/contact_page.dart';
+import 'package:b2b_marketplace_app/features/company/create_company_page.dart';
 
 void main() {
   runApp(
@@ -78,7 +79,7 @@ class MyApp extends ConsumerWidget {
         GoRoute(
           path: '/investors',
           builder: (BuildContext context, GoRouterState state) {
-            return const InvestorPage();
+            return const InvestmentProposalsPage();
           },
         ),
         GoRoute(
@@ -123,6 +124,12 @@ class MyApp extends ConsumerWidget {
           path: '/contact',
           builder: (BuildContext context, GoRouterState state) {
             return const ContactPage();
+          },
+        ),
+        GoRoute(
+          path: '/create-company',
+          builder: (BuildContext context, GoRouterState state) {
+            return const CreateCompanyPage();
           },
         ),
       ],

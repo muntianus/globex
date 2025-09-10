@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/company.dart';
+import '../config.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://127.0.0.1:8000';
+  static final String _baseUrl = AppConfig.apiBaseUrl;
   static const Duration _timeoutDuration = Duration(seconds: 10);
 
   static Map<String, String> get _headers => {
@@ -181,6 +182,28 @@ class ApiService {
       return response.statusCode == 200;
     } catch (e) {
       return false;
+    }
+  }
+
+  // Create a new company
+  static Future<Company> createCompany(Map<String, dynamic> companyData) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/companies/'),
+            headers: _headers,
+            body: jsonEncode(companyData),
+          )
+          .timeout(_timeoutDuration);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return Company.fromJson(data);
+      } else {
+        throw Exception('Failed to create company: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error creating company: $e');
     }
   }
 }
