@@ -1,9 +1,10 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 
 class AuthService {
-  final String baseUrl = "http://127.0.0.1:8000"; // Replace with your backend URL
+  final String baseUrl = AppConfig.apiBaseUrl; // Базовый URL бэкенда
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await http.post(
@@ -28,7 +29,8 @@ class AuthService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'username': username,
-        'hashed_password': password, // Backend expects hashed_password for registration
+        // Backend принимает "password", хешируется на сервере
+        'password': password,
         'email': email,
         'full_name': fullName,
       }),

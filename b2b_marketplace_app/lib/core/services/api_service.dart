@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/company.dart';
+import '../config.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://127.0.0.1:8000';
+  static final String _baseUrl = AppConfig.apiBaseUrl;
   static const Duration _timeoutDuration = Duration(seconds: 10);
 
   static Map<String, String> get _headers => {
