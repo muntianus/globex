@@ -93,6 +93,19 @@ class HomePage extends ConsumerWidget {
                         style: TextStyle(color: Colors.orange.shade700),
                       ),
                     ),
+                    IconButton(
+                      onPressed: () async {
+                        await ref.read(companyProvider.notifier).copyErrorToClipboard();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Ошибка скопирована в буфер обмена'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.copy, color: Colors.orange.shade700),
+                      tooltip: 'Скопировать ошибку',
+                    ),
                     TextButton(
                       onPressed: () => ref.read(companyProvider.notifier).clearError(),
                       child: const Text('Скрыть'),

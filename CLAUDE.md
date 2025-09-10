@@ -251,20 +251,121 @@ The schema includes seed data with:
 - **Intuitive Navigation**: Clear navigation between home, investors, company creation, and other features
 - **Responsive Layout**: Consistent experience across all device types
 
+## Recent Changes & Implementation Details
+
+### Authentication System Improvements
+- **Fixed Admin Login**: Updated PostgreSQL schema with correct bcrypt hash for admin user
+- **Password**: admin/admin now works with hash `$2b$12$BYWjSXn3ZkfXjXZfOJLeouR.kb1vnYy1SW1uP6jiBGnfj8TMCtaHG`
+- **CORS Configuration**: Added Flutter port 8081 to backend CORS settings for cross-origin requests
+- **Database Integration**: Full PostgreSQL integration with connection pooling and fallback to mock data
+
+### Flutter Application Enhancements
+
+#### Company Creation System
+- **Comprehensive Form**: Full company creation form with validation for all business fields
+- **API Integration**: Connects to `/companies/` POST endpoint with proper authentication
+- **Field Validation**: INN validation (min 10 digits), email format validation, required field checks
+- **Success Handling**: Success messages and automatic navigation back to home page
+- **Error Handling**: Detailed error messages with user-friendly feedback
+
+#### Investment Proposals Showcase
+- **Advanced Filtering System**: 
+  - Industry filtering (10+ business categories)
+  - Business stage filtering (startup, growth, expansion, mature)
+  - Investment type filtering (equity, debt, hybrid)
+  - Amount range filtering (₽0 to ₽50M)
+- **Detailed Proposal Cards**: Comprehensive display with investment amount, equity percentage, expected returns
+- **Modal Details View**: Full proposal details with team info, market opportunity, risks, competitive advantages
+- **Provider Integration**: Uses `InvestmentProvider` with state management for real-time filtering
+
+#### Provider Architecture Improvements
+- **Fixed Initialization Conflicts**: Resolved Riverpod provider initialization issues by removing circular dependencies
+- **Error Handling with Clipboard**: Added copy-to-clipboard functionality for error debugging
+- **Database Fallback**: Graceful fallback to mock data when API is unavailable
+- **Loading States**: Proper loading indicators and error states throughout the application
+
+### Backend API Enhancements
+
+#### Database Schema
+- **Complete Business Model**: 25 comprehensive fields for investment proposals
+- **Sample Data**: 25+ companies and investment proposals with realistic business data
+- **Foreign Key Relationships**: Proper relationships between users, companies, and investment proposals
+- **Indexed Fields**: Optimized queries with proper indexing on frequently searched fields
+
+#### API Endpoints
+- **Company Management**: Full CRUD operations for companies with authentication
+- **Investment Proposals**: Complete investment proposal system (ready for implementation)
+- **Categories API**: Dynamic category listing for dropdown populations
+- **Error Handling**: Comprehensive error responses with proper HTTP status codes
+
+### Docker & Infrastructure
+- **Container Orchestration**: Updated docker-compose.yml with proper service dependencies
+- **Volume Management**: Persistent PostgreSQL data with automatic schema initialization
+- **Hot Reload**: Flutter web development with hot reload support
+- **Multi-Port Support**: Supports both 8080 and 8081 for Flutter development flexibility
+
+### Technical Fixes Applied
+
+#### Authentication Issues
+- **Problem**: Admin login failed with "incorrect username or password"
+- **Root Cause**: Database password hash didn't match "admin" password
+- **Solution**: Generated new bcrypt hash and updated database schema
+- **Verification**: Added admin user verification in startup logs
+
+#### CORS Configuration
+- **Problem**: Flutter app getting "ClientException: Failed to fetch" errors
+- **Root Cause**: Backend CORS didn't include Flutter development port
+- **Solution**: Added `http://localhost:8081` and `http://127.0.0.1:8081` to allowed origins
+- **Result**: Seamless API communication between Flutter and FastAPI
+
+#### Provider Initialization
+- **Problem**: "Providers are not allowed to modify other providers during their initialization"
+- **Root Cause**: Circular dependency in Riverpod provider initialization
+- **Solution**: Removed `app_initializer.dart` and simplified provider initialization pattern
+- **Result**: Clean provider initialization without conflicts
+
+#### API Response Format
+- **Problem**: Flutter expected company array but got object with "companies" key
+- **Root Cause**: API response format mismatch
+- **Solution**: Updated API to return company array directly
+- **Result**: Proper data binding in Flutter without additional parsing
+
+#### Data Model Compatibility
+- **Problem**: API fields (`category_id`, `reviews_count`) didn't match Flutter model fields
+- **Root Cause**: Naming convention differences between backend and frontend
+- **Solution**: Updated `Company.fromJson()` to handle both naming conventions with null safety
+- **Result**: Robust data parsing that works with both mock and API data
+
+#### Dropdown Widget Error
+- **Problem**: "There should be exactly one item with [DropdownButton]'s value: all"
+- **Root Cause**: Initial value 'all' was filtered out but still set as default
+- **Solution**: Changed initial category from 'all' to 'manufacturing'
+- **Result**: Proper dropdown initialization without runtime errors
+
+### Code Quality Improvements
+- **Null Safety**: Complete null safety implementation across all Flutter models
+- **Error Boundaries**: Comprehensive error handling with user-friendly messages
+- **Loading States**: Proper loading indicators and states throughout the application
+- **Validation**: Client-side validation for all forms with appropriate error messages
+- **Responsive Design**: Mobile-first responsive design that works on all screen sizes
+
 ## Development Notes
 
 ### Current Status
-- **Backend**: Fully functional API with PostgreSQL schema ready
-- **Frontend (React)**: Basic authentication and dashboard structure
-- **Flutter App**: Complete investment showcase with mock data, ready for API integration
-- **Database**: Production-ready schema with sample data
+- **Backend**: Fully functional API with complete PostgreSQL integration and authentication
+- **Frontend (React)**: Basic authentication and dashboard structure  
+- **Flutter App**: Production-ready investment showcase with full API integration capability
+- **Database**: Production schema with 25+ companies and investment proposals
+- **Authentication**: Working admin/admin login with JWT token flow
+- **Error Handling**: Comprehensive error handling with clipboard debugging support
 
 ### Next Steps
-1. Connect Flutter investment proposals to backend API
-2. Implement investor interest/contact functionality
-3. Add real-time notifications for new proposals
-4. Enhance filtering and search capabilities
-5. Add company dashboard for managing their proposals
+1. **Complete API Integration**: Connect Flutter investment proposals to live backend data
+2. **User Registration**: Implement user registration flow in Flutter app
+3. **Investment Interest**: Add investor interest/contact functionality with email notifications
+4. **Real-time Updates**: Implement WebSocket or polling for real-time proposal updates
+5. **Admin Dashboard**: Create admin interface for managing companies and proposals
+6. **Mobile Optimization**: Fine-tune mobile experience and add push notifications
 
 ## SSL Configuration
 

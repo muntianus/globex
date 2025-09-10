@@ -45,28 +45,28 @@ class Company {
 
   factory Company.fromJson(Map<String, dynamic> json) {
     return Company(
-      id: json['id'],
-      name: json['name'],
-      category: json['category'],
-      description: json['description'],
-      rating: json['rating'].toDouble(),
-      reviewsCount: json['reviewsCount'],
-      verified: json['verified'],
-      inn: json['inn'],
-      region: json['region'],
-      yearFounded: json['yearFounded'],
-      employees: json['employees'],
-      tags: List<String>.from(json['tags']),
-      logo: json['logo'],
-      phone: json['phone'],
-      email: json['email'],
-      website: json['website'],
-      completedDeals: json['completedDeals'],
-      responseTime: json['responseTime'],
-      services: List<String>.from(json['services']),
-      reviews: (json['reviews'] as List)
-          .map((reviewJson) => Review.fromJson(reviewJson))
-          .toList(),
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      category: json['category_id'] ?? json['category'] ?? '',
+      description: json['description'] ?? '',
+      rating: (json['rating'] ?? 0.0).toDouble(),
+      reviewsCount: json['reviews_count'] ?? json['reviewsCount'] ?? 0,
+      verified: json['verified'] ?? false,
+      inn: json['inn'] ?? '',
+      region: json['region'] ?? '',
+      yearFounded: json['year_founded'] ?? json['yearFounded'] ?? 2000,
+      employees: json['employees'] ?? '',
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : [],
+      logo: json['logo'] ?? '🏢',
+      phone: json['phone'] ?? '',
+      email: json['email'] ?? '',
+      website: json['website'] ?? '',
+      completedDeals: json['completed_deals'] ?? json['completedDeals'] ?? 0,
+      responseTime: json['response_time'] ?? json['responseTime'] ?? '',
+      services: json['services'] != null ? List<String>.from(json['services']) : [],
+      reviews: json['reviews'] != null 
+          ? (json['reviews'] as List).map((reviewJson) => Review.fromJson(reviewJson)).toList()
+          : [],
     );
   }
 }

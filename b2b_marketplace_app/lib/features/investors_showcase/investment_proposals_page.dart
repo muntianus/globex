@@ -35,8 +35,8 @@ class _InvestmentProposalsPageState extends ConsumerState<InvestmentProposalsPag
 
   @override
   Widget build(BuildContext context) {
-    final proposals = ref.watch(investmentProvider);
-    final filteredProposals = _filterProposals(proposals);
+    final investmentState = ref.watch(investmentProvider);
+    final filteredProposals = _filterProposals(investmentState.proposals);
     
     return Scaffold(
       appBar: AppBar(

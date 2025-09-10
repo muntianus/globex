@@ -23,7 +23,7 @@ class _CreateCompanyPageState extends ConsumerState<CreateCompanyPage> {
   final _websiteController = TextEditingController();
   final _yearFoundedController = TextEditingController();
   
-  String _selectedCategory = 'all';
+  String _selectedCategory = 'manufacturing';
   String _selectedRegion = 'Москва';
   String _selectedEmployees = '10-50';
   String _selectedLogo = '🏢';
