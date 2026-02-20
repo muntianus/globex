@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, UTC
 from typing import Optional, List
 from pydantic import BaseModel
 import databases
-import asyncpg
 from contextlib import asynccontextmanager
 
 # Configure logging
@@ -56,11 +55,18 @@ app.add_middleware(
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = datetime.now()
-    
+
     # Log request
     logger.info(f"🔵 REQUEST: {request.method} {request.url}")
-    logger.info(f"🔵 Headers: {dict(request.headers)}")
-    if request.method in ["POST", "PUT", "PATCH"]:
+
+    sanitized_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in {"authorization"}
+    }
+    if sanitized_headers:
+        logger.info(f"🔵 Headers: {sanitized_headers}")
+    if request.method in ["POST", "PUT", "PATCH"] and request.url.path != "/token":
         try:
             body = await request.body()
             if body:
@@ -222,67 +228,105 @@ async def get_companies_from_db(skip: int = 0, limit: int = 10):
         LIMIT :limit OFFSET :skip
     """
     companies_records = await database.fetch_all(query, values={"skip": skip, "limit": limit})
-    
-    companies = []
-    for company_record in companies_records:
-        company_id = company_record["id"]
-        
-        # Get tags
-        tags_query = "SELECT tag FROM company_tags WHERE company_id = :company_id"
-        tags_records = await database.fetch_all(tags_query, values={"company_id": company_id})
-        tags = [tag_record["tag"] for tag_record in tags_records]
-        
-        # Get services
-        services_query = "SELECT service FROM company_services WHERE company_id = :company_id"
-        services_records = await database.fetch_all(services_query, values={"company_id": company_id})
-        services = [service_record["service"] for service_record in services_records]
-        
-        # Get reviews
-        reviews_query = "SELECT * FROM reviews WHERE company_id = :company_id ORDER BY created_at DESC"
-        reviews_records = await database.fetch_all(reviews_query, values={"company_id": company_id})
-        reviews = [
-            Review(
-                id=review["id"],
-                author=review["author"],
-                rating=review["rating"],
-                text=review["text"],
-                date=review["date"].strftime("%Y-%m-%d")
-            ) for review in reviews_records
-        ]
-        
-        # Build company object
-        company = Company(
-            id=company_record["id"],
-            name=company_record["name"],
-            category=company_record["category_id"],
-            description=company_record["description"],
-            rating=float(company_record["rating"]),
-            reviewsCount=company_record["reviews_count"],
-            verified=company_record["verified"],
-            inn=company_record["inn"],
-            region=company_record["region"],
-            yearFounded=company_record["year_founded"],
-            employees=company_record["employees"],
-            tags=tags,
-            logo=company_record["logo"],
-            phone=company_record["phone"],
-            email=company_record["email"],
-            website=company_record["website"],
-            completedDeals=company_record["completed_deals"],
-            responseTime=company_record["response_time"],
-            services=services,
-            reviews=reviews
-        )
-        companies.append(company)
-    
-    return companies
+
+    if not companies_records:
+        return []
+
+    company_ids = [company_record["id"] for company_record in companies_records]
+    tags_map = await _fetch_related_values("company_tags", "tag", company_ids)
+    services_map = await _fetch_related_values("company_services", "service", company_ids)
+    reviews_map = await _fetch_reviews(company_ids)
+
+    return [
+        _build_company(company_record, tags_map, services_map, reviews_map)
+        for company_record in companies_records
+    ]
 
 async def get_company_from_db(company_id: int):
-    companies = await get_companies_from_db(0, 1000)  # Get all to find by ID
-    for company in companies:
-        if company.id == company_id:
-            return company
-    return None
+    company_query = """
+        SELECT c.*, cat.id as category_id
+        FROM companies c
+        LEFT JOIN categories cat ON c.category_id = cat.id
+        WHERE c.id = :company_id
+    """
+    company_record = await database.fetch_one(company_query, values={"company_id": company_id})
+    if not company_record:
+        return None
+
+    tags_map = await _fetch_related_values("company_tags", "tag", [company_id])
+    services_map = await _fetch_related_values("company_services", "service", [company_id])
+    reviews_map = await _fetch_reviews([company_id])
+
+    return _build_company(company_record, tags_map, services_map, reviews_map)
+
+
+async def _fetch_related_values(table: str, column: str, company_ids: List[int]):
+    if not company_ids:
+        return {}
+
+    query = f"""
+        SELECT company_id, {column}
+        FROM {table}
+        WHERE company_id = ANY(:company_ids)
+        ORDER BY company_id
+    """
+    records = await database.fetch_all(query, values={"company_ids": company_ids})
+
+    result = {}
+    for record in records:
+        result.setdefault(record["company_id"], []).append(record[column])
+    return result
+
+
+async def _fetch_reviews(company_ids: List[int]):
+    if not company_ids:
+        return {}
+
+    query = """
+        SELECT id, company_id, author, rating, text, date
+        FROM reviews
+        WHERE company_id = ANY(:company_ids)
+        ORDER BY company_id, created_at DESC
+    """
+    records = await database.fetch_all(query, values={"company_ids": company_ids})
+
+    result = {}
+    for record in records:
+        review = Review(
+            id=record["id"],
+            author=record["author"],
+            rating=record["rating"],
+            text=record["text"],
+            date=record["date"].strftime("%Y-%m-%d")
+        )
+        result.setdefault(record["company_id"], []).append(review)
+    return result
+
+
+def _build_company(company_record, tags_map, services_map, reviews_map):
+    company_id = company_record["id"]
+    return Company(
+        id=company_id,
+        name=company_record["name"],
+        category=company_record["category_id"],
+        description=company_record["description"],
+        rating=float(company_record["rating"]),
+        reviewsCount=company_record["reviews_count"],
+        verified=company_record["verified"],
+        inn=company_record["inn"],
+        region=company_record["region"],
+        yearFounded=company_record["year_founded"],
+        employees=company_record["employees"],
+        tags=tags_map.get(company_id, []),
+        logo=company_record["logo"],
+        phone=company_record["phone"],
+        email=company_record["email"],
+        website=company_record["website"],
+        completedDeals=company_record["completed_deals"],
+        responseTime=company_record["response_time"],
+        services=services_map.get(company_id, []),
+        reviews=reviews_map.get(company_id, [])
+    )
 
 # --- API Endpoints ---
 @app.post("/token", response_model=Token)
